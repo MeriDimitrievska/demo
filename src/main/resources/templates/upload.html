@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>File Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center; /* Center align all text */
+    }
+
+    /* File Upload Section */
+    #uploadForm {
+      margin-top: 50px; /* Add margin to top */
+    }
+
+    #fileInput {
+      margin-right: 10px; /* Add margin to right */
+    }
+
+    #sendButton {
+      background-color: #8bc34a; /* Light green background */
+      color: white; /* White text color */
+      border: none;
+      padding: 10px 20px; /* Add padding */
+      cursor: pointer;
+      transition: background-color 0.3s; /* Smooth hover transition */
+      border-radius: 10px;
+    }
+
+    #sendButton:hover {
+      background-color: #689f38; /* Darker green on hover */
+    }
+
+    /* Table Styles */
+    table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: 20px auto;
+    }
+
+    th, td {
+      border: 1px solid #dddddd;
+      text-align: center; /* Center align text */
+      padding: 8px;
+    }
+
+    th {
+      background-color: #e0e0e0; /* Very light blue */
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2; /* Light grey */
+    }
+
+    tr:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+<p>This page simulates sending 57 requests every minute for a duration of 5 minutes to simulate Linear Traffic.</p>
+<form id="uploadForm" method="post" enctype="multipart/form-data">
+  <input type="file" name="file" id="fileInput" />
+  <button type="button" id="sendButton" onclick="sendRequests()">Send Requests</button>
+</form>
+
+<table>
+  <thead>
+  <tr>
+    <th>Number of requests</th>
+    <th>Total Duration (ms)</th>
+  </tr>
+  </thead>
+  <tbody id="resultsBody">
+  <!-- Results will be displayed here -->
+  </tbody>
+</table>
+
+<script th:inline="javascript">
+  function sendRequests() {
+    var fileInput = document.getElementById('fileInput');
+    var file = fileInput.files[0];
+    var formData = new FormData();
+    formData.append('file', file);
+
+    var numberOfRequests = 57; // 57 requests
+    var batches = 5; // Number of batches to send (5 minutes in total)
+
+    var batchCount = 0;
+    var startTime = performance.now();
+
+    var sendBatch = function() {
+      var batchStartTime = performance.now(); // Record start time for the batch
+      var requestsSent = 0; // Counter for requests in the current batch
+
+      for (var i = 0; i < numberOfRequests; i++) {
+        fetch('api/upload', {
+          method: 'POST',
+          body: formData
+        })
+                .then(response => response.text())
+                .then(() => {
+                  requestsSent++;
+
+                  if (requestsSent === numberOfRequests) {
+                    // All requests in the batch are completed, calculate total duration and add a row
+                    var batchEndTime = performance.now();
+                    var batchTime = batchEndTime - batchStartTime;
+                    var totalRow = document.createElement('tr');
+                    totalRow.innerHTML = `
+                  <td>57</td>
+                  <td>${batchTime.toFixed(0)}</td>
+              `;
+                    document.getElementById('resultsBody').appendChild(totalRow);
+
+                    batchCount++;
+                    if (batchCount < batches) {
+                      setTimeout(sendBatch, 60000); // Send next batch after 1 minute (60000 milliseconds)
+                    }
+                  }
+                })
+                .catch(error => console.error('Error:', error));
+      }
+    };
+
+    // Start sending batches immediately
+    sendBatch();
+  }
+
+</script>
+</body>
+</html>
